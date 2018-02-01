@@ -32,30 +32,29 @@ namespace MusicBeePlugin
             this.about.ReceiveNotifications = (ReceiveNotificationFlags.PlayerEvents | ReceiveNotificationFlags.TagEvents);
             this.about.ConfigurationPanelHeight = 0;   // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
 
-            this.InitialiseDiscord();
+            InitialiseDiscord();
             
             return this.about;
         }
 
-        private void InitialiseDiscord()
+        private static void InitialiseDiscord()
         {
             var handlers = new DiscordRPC.DiscordEventHandlers
             {
-                readyCallback = this.HandleReadyCallback,
-                errorCallback = this.HandleErrorCallback,
-                disconnectedCallback = this.HandleDisconnectedCallback
+                readyCallback = HandleReadyCallback,
+                errorCallback = HandleErrorCallback,
+                disconnectedCallback = HandleDisconnectedCallback
             };
             DiscordRPC.Initialize("381981355539693579", ref handlers, true, null);
         }
 
-        private void HandleReadyCallback() { }
-        private void HandleErrorCallback(int errorCode, string message) { }
-        private void HandleDisconnectedCallback(int errorCode, string message) { }
+        private static void HandleReadyCallback() { }
+        private static void HandleErrorCallback(int errorCode, string message) { }
+        private static void HandleDisconnectedCallback(int errorCode, string message) { }
 
-        private void UpdatePresence(string song, string duration, int position, string state = "Listening to music")
+        private static void UpdatePresence(string song, string duration, int position, string state = "Listening to music via MusicBee")
         {
-            var presence = new DiscordRPC.RichPresence();
-            presence.state = state;
+            var presence = new DiscordRPC.RichPresence { state = state };
             song = Utility.Utf16ToUtf8(song);
             presence.details = song.Substring(0, song.Length - 1);
             presence.largeImageKey = "musicbee";
@@ -77,10 +76,12 @@ namespace MusicBeePlugin
             if (panelHandle != IntPtr.Zero)
             {
                 var configPanel = (Panel)Control.FromHandle(panelHandle);
-                var prompt = new Label();
-                prompt.AutoSize = true;
-                prompt.Location = new Point(0, 0);
-                prompt.Text = "prompt:";
+                var prompt = new Label
+                {
+                    AutoSize = true,
+                    Location = new Point(0, 0),
+                    Text = "prompt:"
+                };
                 var textBox = new TextBox();
                 textBox.Bounds = new Rectangle(60, 0, 100, textBox.Height);
                 configPanel.Controls.AddRange(new Control[] { prompt, textBox });
@@ -127,15 +128,15 @@ namespace MusicBeePlugin
                     switch (this.mbApiInterface.Player_GetPlayState())
                     {
                         case PlayState.Playing:
-                            this.UpdatePresence(song, duration, position / 1000);
+                            UpdatePresence(song, duration, position / 1000);
                             break;
                         case PlayState.Paused:
-                            this.UpdatePresence(song, duration, 0, state: "Paused");
+                            UpdatePresence(song, duration, 0, "Paused");
                             break;
                     }
                     break;
                 case NotificationType.TrackChanged:
-                    this.UpdatePresence(song, duration, 0);
+                    UpdatePresence(song, duration, 0);
                     break;
             }
         }

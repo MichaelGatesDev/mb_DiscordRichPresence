@@ -39,10 +39,12 @@ namespace MusicBeePlugin
 
         private void InitialiseDiscord()
         {
-            var handlers = new DiscordRPC.DiscordEventHandlers();
-            handlers.readyCallback = this.HandleReadyCallback;
-            handlers.errorCallback = this.HandleErrorCallback;
-            handlers.disconnectedCallback = this.HandleDisconnectedCallback;
+            var handlers = new DiscordRPC.DiscordEventHandlers
+            {
+                readyCallback = this.HandleReadyCallback,
+                errorCallback = this.HandleErrorCallback,
+                disconnectedCallback = this.HandleDisconnectedCallback
+            };
             DiscordRPC.Initialize("381981355539693579", ref handlers, true, null);
         }
 

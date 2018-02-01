@@ -12,7 +12,7 @@ namespace MusicBeePlugin
     public partial class Plugin
     {
         private MusicBeeApiInterface mbApiInterface;
-        private PluginInfo about = new PluginInfo();
+        private readonly PluginInfo about = new PluginInfo();
 
         public PluginInfo Initialise(IntPtr apiInterfacePtr)
         {

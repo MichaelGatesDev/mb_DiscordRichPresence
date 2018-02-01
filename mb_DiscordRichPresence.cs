@@ -135,7 +135,8 @@ namespace MusicBeePlugin
             switch(type)
             {
                 case NotificationType.PluginStartup:
-                // perform startup initialisation
+                    // perform startup initialisation
+                    break;
                 case NotificationType.PlayStateChanged:
                     switch(this.mbApiInterface.Player_GetPlayState())
                     {
@@ -146,7 +147,6 @@ namespace MusicBeePlugin
                             UpdatePresence(song, duration, 0, "Paused");
                             break;
                     }
-
                     break;
                 case NotificationType.TrackChanged:
                     UpdatePresence(song, duration, 0);

@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;
-
 using DiscordInterface;
 using Util;
 
@@ -22,18 +21,18 @@ namespace MusicBeePlugin
             this.about.Name = "Discord Rich Presence for MusicBee";
             this.about.Description = "Updates Discord Rich Presence with MusicBee metadata";
             this.about.Author = "Harmon758 / michaelgatesdev";
-            this.about.TargetApplication = "";   // current only applies to artwork, lyrics or instant messenger name that appears in the provider drop down selector or target Instant Messenger
+            this.about.TargetApplication = ""; // current only applies to artwork, lyrics or instant messenger name that appears in the provider drop down selector or target Instant Messenger
             this.about.Type = PluginType.General;
-            this.about.VersionMajor = 1;  // your plugin version
+            this.about.VersionMajor = 1; // your plugin version
             this.about.VersionMinor = 0;
             this.about.Revision = 3;
             this.about.MinInterfaceVersion = MinInterfaceVersion;
             this.about.MinApiRevision = MinApiRevision;
             this.about.ReceiveNotifications = (ReceiveNotificationFlags.PlayerEvents | ReceiveNotificationFlags.TagEvents);
-            this.about.ConfigurationPanelHeight = 0;   // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
+            this.about.ConfigurationPanelHeight = 0; // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
 
             InitialiseDiscord();
-            
+
             return this.about;
         }
 
@@ -48,17 +47,25 @@ namespace MusicBeePlugin
             DiscordRPC.Initialize("381981355539693579", ref handlers, true, null);
         }
 
-        private static void HandleReadyCallback() { }
-        private static void HandleErrorCallback(int errorCode, string message) { }
-        private static void HandleDisconnectedCallback(int errorCode, string message) { }
+        private static void HandleReadyCallback()
+        {
+        }
 
-        private static void UpdatePresence(string song, string duration, int position, string state = "Listening to music via MusicBee")
+        private static void HandleErrorCallback(int errorCode, string message)
+        {
+        }
+
+        private static void HandleDisconnectedCallback(int errorCode, string message)
+        {
+        }
+
+        private static void UpdatePresence(string song, string duration, int position, string state = "Listening to music")
         {
             var presence = new DiscordRPC.RichPresence { state = state };
             song = Utility.Utf16ToUtf8(song);
             presence.details = song.Substring(0, song.Length - 1);
             presence.largeImageKey = "musicbee";
-            var now = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+            var now = (long) (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
             presence.startTimestamp = now - position;
             // string[] durations = duration.Split(':');
             // long end = now + System.Convert.ToInt64(durations[0]) * 60 + System.Convert.ToInt64(durations[1]);
@@ -73,9 +80,9 @@ namespace MusicBeePlugin
             // panelHandle will only be set if you set about.ConfigurationPanelHeight to a non-zero value
             // keep in mind the panel width is scaled according to the font the user has selected
             // if about.ConfigurationPanelHeight is set to 0, you can display your own popup window
-            if (panelHandle != IntPtr.Zero)
+            if(panelHandle != IntPtr.Zero)
             {
-                var configPanel = (Panel)Control.FromHandle(panelHandle);
+                var configPanel = (Panel) Control.FromHandle(panelHandle);
                 var prompt = new Label
                 {
                     AutoSize = true,
@@ -86,9 +93,10 @@ namespace MusicBeePlugin
                 textBox.Bounds = new Rectangle(60, 0, 100, textBox.Height);
                 configPanel.Controls.AddRange(new Control[] { prompt, textBox });
             }
+
             return false;
         }
-       
+
         // called by MusicBee when the user clicks Apply or Save in the MusicBee Preferences screen.
         // its up to you to figure out whether anything has changed and needs updating
         public void SaveSettings()
@@ -118,14 +126,18 @@ namespace MusicBeePlugin
             // mbApiInterface.NowPlaying_GetDuration();
             var position = this.mbApiInterface.Player_GetPosition();
             var song = artist + " - " + trackTitle;
-            if (string.IsNullOrEmpty(artist)) { song = trackTitle; }
+            if(string.IsNullOrEmpty(artist))
+            {
+                song = trackTitle;
+            }
+
             // perform some action depending on the notification type
-            switch (type)
+            switch(type)
             {
                 case NotificationType.PluginStartup:
-                    // perform startup initialisation
+                // perform startup initialisation
                 case NotificationType.PlayStateChanged:
-                    switch (this.mbApiInterface.Player_GetPlayState())
+                    switch(this.mbApiInterface.Player_GetPlayState())
                     {
                         case PlayState.Playing:
                             UpdatePresence(song, duration, position / 1000);
@@ -134,11 +146,12 @@ namespace MusicBeePlugin
                             UpdatePresence(song, duration, 0, "Paused");
                             break;
                     }
+
                     break;
                 case NotificationType.TrackChanged:
                     UpdatePresence(song, duration, 0);
                     break;
             }
         }
-   }
+    }
 }

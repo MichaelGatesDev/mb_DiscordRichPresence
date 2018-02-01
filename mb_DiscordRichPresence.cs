@@ -16,33 +16,33 @@ namespace MusicBeePlugin
 
         public PluginInfo Initialise(IntPtr apiInterfacePtr)
         {
-            mbApiInterface = new MusicBeeApiInterface();
-            mbApiInterface.Initialise(apiInterfacePtr);
-            about.PluginInfoVersion = PluginInfoVersion;
-            about.Name = "Discord Rich Presence";
-            about.Description = "Sets currently playing song as Discord Rich Presence";
-            about.Author = "Harmon758";
-            about.TargetApplication = "";   // current only applies to artwork, lyrics or instant messenger name that appears in the provider drop down selector or target Instant Messenger
-            about.Type = PluginType.General;
-            about.VersionMajor = 1;  // your plugin version
-            about.VersionMinor = 0;
-            about.Revision = 2;
-            about.MinInterfaceVersion = MinInterfaceVersion;
-            about.MinApiRevision = MinApiRevision;
-            about.ReceiveNotifications = (ReceiveNotificationFlags.PlayerEvents | ReceiveNotificationFlags.TagEvents);
-            about.ConfigurationPanelHeight = 0;   // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
+            this.mbApiInterface = new MusicBeeApiInterface();
+            this.mbApiInterface.Initialise(apiInterfacePtr);
+            this.about.PluginInfoVersion = PluginInfoVersion;
+            this.about.Name = "Discord Rich Presence";
+            this.about.Description = "Sets currently playing song as Discord Rich Presence";
+            this.about.Author = "Harmon758";
+            this.about.TargetApplication = "";   // current only applies to artwork, lyrics or instant messenger name that appears in the provider drop down selector or target Instant Messenger
+            this.about.Type = PluginType.General;
+            this.about.VersionMajor = 1;  // your plugin version
+            this.about.VersionMinor = 0;
+            this.about.Revision = 2;
+            this.about.MinInterfaceVersion = MinInterfaceVersion;
+            this.about.MinApiRevision = MinApiRevision;
+            this.about.ReceiveNotifications = (ReceiveNotificationFlags.PlayerEvents | ReceiveNotificationFlags.TagEvents);
+            this.about.ConfigurationPanelHeight = 0;   // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
 
-            InitialiseDiscord();
+            this.InitialiseDiscord();
             
-            return about;
+            return this.about;
         }
 
         private void InitialiseDiscord()
         {
             var handlers = new DiscordRPC.DiscordEventHandlers();
-            handlers.readyCallback = HandleReadyCallback;
-            handlers.errorCallback = HandleErrorCallback;
-            handlers.disconnectedCallback = HandleDisconnectedCallback;
+            handlers.readyCallback = this.HandleReadyCallback;
+            handlers.errorCallback = this.HandleErrorCallback;
+            handlers.disconnectedCallback = this.HandleDisconnectedCallback;
             DiscordRPC.Initialize("381981355539693579", ref handlers, true, null);
         }
 
@@ -68,13 +68,13 @@ namespace MusicBeePlugin
         public bool Configure(IntPtr panelHandle)
         {
             // save any persistent settings in a sub-folder of this path
-            var dataPath = mbApiInterface.Setting_GetPersistentStoragePath();
+            var dataPath = this.mbApiInterface.Setting_GetPersistentStoragePath();
             // panelHandle will only be set if you set about.ConfigurationPanelHeight to a non-zero value
             // keep in mind the panel width is scaled according to the font the user has selected
             // if about.ConfigurationPanelHeight is set to 0, you can display your own popup window
             if (panelHandle != IntPtr.Zero)
             {
-                var configPanel = (Panel)Panel.FromHandle(panelHandle);
+                var configPanel = (Panel)Control.FromHandle(panelHandle);
                 var prompt = new Label();
                 prompt.AutoSize = true;
                 prompt.Location = new Point(0, 0);
@@ -91,7 +91,7 @@ namespace MusicBeePlugin
         public void SaveSettings()
         {
             // save any persistent settings in a sub-folder of this path
-            var dataPath = mbApiInterface.Setting_GetPersistentStoragePath();
+            var dataPath = this.mbApiInterface.Setting_GetPersistentStoragePath();
         }
 
         // MusicBee is closing the plugin (plugin is being disabled by user or MusicBee is shutting down)
@@ -109,11 +109,11 @@ namespace MusicBeePlugin
         // you need to set about.ReceiveNotificationFlags = PlayerEvents to receive all notifications, and not just the startup event
         public void ReceiveNotification(string sourceFileUrl, NotificationType type)
         {
-            var artist = mbApiInterface.NowPlaying_GetFileTag(MetaDataType.Artist);
-            var trackTitle = mbApiInterface.NowPlaying_GetFileTag(MetaDataType.TrackTitle);
-            var duration = mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Duration);
+            var artist = this.mbApiInterface.NowPlaying_GetFileTag(MetaDataType.Artist);
+            var trackTitle = this.mbApiInterface.NowPlaying_GetFileTag(MetaDataType.TrackTitle);
+            var duration = this.mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Duration);
             // mbApiInterface.NowPlaying_GetDuration();
-            var position = mbApiInterface.Player_GetPosition();
+            var position = this.mbApiInterface.Player_GetPosition();
             var song = artist + " - " + trackTitle;
             if (string.IsNullOrEmpty(artist)) { song = trackTitle; }
             // perform some action depending on the notification type
@@ -122,18 +122,18 @@ namespace MusicBeePlugin
                 case NotificationType.PluginStartup:
                     // perform startup initialisation
                 case NotificationType.PlayStateChanged:
-                    switch (mbApiInterface.Player_GetPlayState())
+                    switch (this.mbApiInterface.Player_GetPlayState())
                     {
                         case PlayState.Playing:
-                            UpdatePresence(song, duration, position / 1000);
+                            this.UpdatePresence(song, duration, position / 1000);
                             break;
                         case PlayState.Paused:
-                            UpdatePresence(song, duration, 0, state: "Paused");
+                            this.UpdatePresence(song, duration, 0, state: "Paused");
                             break;
                     }
                     break;
                 case NotificationType.TrackChanged:
-                    UpdatePresence(song, duration, 0);
+                    this.UpdatePresence(song, duration, 0);
                     break;
             }
         }

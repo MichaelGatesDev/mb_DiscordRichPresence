@@ -59,13 +59,13 @@ namespace MusicBeePlugin
         {
         }
 
-        private static void UpdatePresence(string song, string duration, int position, string state = "Listening to music")
+        private static void UpdatePresence(string song, int position, string state = "Listening to music")
         {
             var presence = new DiscordRPC.RichPresence { state = state };
             song = Utility.Utf16ToUtf8(song);
             presence.details = song.Substring(0, song.Length - 1);
             presence.largeImageKey = "musicbee";
-            var now = (long) (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+            var now = (long) DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
             presence.startTimestamp = now - position;
             // string[] durations = duration.Split(':');
             // long end = now + System.Convert.ToInt64(durations[0]) * 60 + System.Convert.ToInt64(durations[1]);
@@ -125,7 +125,7 @@ namespace MusicBeePlugin
             var duration = this.mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Duration);
             // mbApiInterface.NowPlaying_GetDuration();
             var position = this.mbApiInterface.Player_GetPosition();
-            var song = artist + " - " + trackTitle;
+            var song = $"{trackTitle} ({artist})";
             if(string.IsNullOrEmpty(artist))
             {
                 song = trackTitle;
@@ -141,15 +141,15 @@ namespace MusicBeePlugin
                     switch(this.mbApiInterface.Player_GetPlayState())
                     {
                         case PlayState.Playing:
-                            UpdatePresence(song, duration, position / 1000);
+                            UpdatePresence(song, position / 1000);
                             break;
                         case PlayState.Paused:
-                            UpdatePresence(song, duration, 0, "Paused");
+                            UpdatePresence(song, 0, "Paused");
                             break;
                     }
                     break;
                 case NotificationType.TrackChanged:
-                    UpdatePresence(song, duration, 0);
+                    UpdatePresence(song, 0);
                     break;
             }
         }

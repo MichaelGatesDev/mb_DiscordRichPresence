@@ -19,14 +19,14 @@ namespace MusicBeePlugin
             this.mbApiInterface = new MusicBeeApiInterface();
             this.mbApiInterface.Initialise(apiInterfacePtr);
             this.about.PluginInfoVersion = PluginInfoVersion;
-            this.about.Name = "Discord Rich Presence";
-            this.about.Description = "Sets currently playing song as Discord Rich Presence";
-            this.about.Author = "Harmon758";
+            this.about.Name = "Discord Rich Presence for MusicBee";
+            this.about.Description = "Updates Discord Rich Presence with MusicBee metadata";
+            this.about.Author = "Harmon758 / michaelgatesdev";
             this.about.TargetApplication = "";   // current only applies to artwork, lyrics or instant messenger name that appears in the provider drop down selector or target Instant Messenger
             this.about.Type = PluginType.General;
             this.about.VersionMajor = 1;  // your plugin version
             this.about.VersionMinor = 0;
-            this.about.Revision = 2;
+            this.about.Revision = 3;
             this.about.MinInterfaceVersion = MinInterfaceVersion;
             this.about.MinApiRevision = MinApiRevision;
             this.about.ReceiveNotifications = (ReceiveNotificationFlags.PlayerEvents | ReceiveNotificationFlags.TagEvents);

@@ -39,7 +39,7 @@ namespace MusicBeePlugin
 
         private void InitialiseDiscord()
         {
-            DiscordRPC.DiscordEventHandlers handlers = new DiscordRPC.DiscordEventHandlers();
+            var handlers = new DiscordRPC.DiscordEventHandlers();
             handlers.readyCallback = HandleReadyCallback;
             handlers.errorCallback = HandleErrorCallback;
             handlers.disconnectedCallback = HandleDisconnectedCallback;
@@ -52,12 +52,12 @@ namespace MusicBeePlugin
 
         private void UpdatePresence(string song, string duration, int position, string state = "Listening to music")
         {
-            DiscordRPC.RichPresence presence = new DiscordRPC.RichPresence();
+            var presence = new DiscordRPC.RichPresence();
             presence.state = state;
             song = Utility.Utf16ToUtf8(song);
             presence.details = song.Substring(0, song.Length - 1);
             presence.largeImageKey = "musicbee";
-            long now = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+            var now = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
             presence.startTimestamp = now - position;
             // string[] durations = duration.Split(':');
             // long end = now + System.Convert.ToInt64(durations[0]) * 60 + System.Convert.ToInt64(durations[1]);
@@ -68,18 +68,18 @@ namespace MusicBeePlugin
         public bool Configure(IntPtr panelHandle)
         {
             // save any persistent settings in a sub-folder of this path
-            string dataPath = mbApiInterface.Setting_GetPersistentStoragePath();
+            var dataPath = mbApiInterface.Setting_GetPersistentStoragePath();
             // panelHandle will only be set if you set about.ConfigurationPanelHeight to a non-zero value
             // keep in mind the panel width is scaled according to the font the user has selected
             // if about.ConfigurationPanelHeight is set to 0, you can display your own popup window
             if (panelHandle != IntPtr.Zero)
             {
-                Panel configPanel = (Panel)Panel.FromHandle(panelHandle);
-                Label prompt = new Label();
+                var configPanel = (Panel)Panel.FromHandle(panelHandle);
+                var prompt = new Label();
                 prompt.AutoSize = true;
                 prompt.Location = new Point(0, 0);
                 prompt.Text = "prompt:";
-                TextBox textBox = new TextBox();
+                var textBox = new TextBox();
                 textBox.Bounds = new Rectangle(60, 0, 100, textBox.Height);
                 configPanel.Controls.AddRange(new Control[] { prompt, textBox });
             }
@@ -91,7 +91,7 @@ namespace MusicBeePlugin
         public void SaveSettings()
         {
             // save any persistent settings in a sub-folder of this path
-            string dataPath = mbApiInterface.Setting_GetPersistentStoragePath();
+            var dataPath = mbApiInterface.Setting_GetPersistentStoragePath();
         }
 
         // MusicBee is closing the plugin (plugin is being disabled by user or MusicBee is shutting down)
@@ -109,12 +109,12 @@ namespace MusicBeePlugin
         // you need to set about.ReceiveNotificationFlags = PlayerEvents to receive all notifications, and not just the startup event
         public void ReceiveNotification(string sourceFileUrl, NotificationType type)
         {
-            string artist = mbApiInterface.NowPlaying_GetFileTag(MetaDataType.Artist);
-            string trackTitle = mbApiInterface.NowPlaying_GetFileTag(MetaDataType.TrackTitle);
-            string duration = mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Duration);
+            var artist = mbApiInterface.NowPlaying_GetFileTag(MetaDataType.Artist);
+            var trackTitle = mbApiInterface.NowPlaying_GetFileTag(MetaDataType.TrackTitle);
+            var duration = mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Duration);
             // mbApiInterface.NowPlaying_GetDuration();
-            int position = mbApiInterface.Player_GetPosition();
-            string song = artist + " - " + trackTitle;
+            var position = mbApiInterface.Player_GetPosition();
+            var song = artist + " - " + trackTitle;
             if (string.IsNullOrEmpty(artist)) { song = trackTitle; }
             // perform some action depending on the notification type
             switch (type)

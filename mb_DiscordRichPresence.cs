@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using DiscordInterface;
 using Util;
 
@@ -12,6 +13,8 @@ namespace MusicBeePlugin
     {
         private MusicBeeApiInterface mbApiInterface;
         private readonly PluginInfo about = new PluginInfo();
+
+        private SongInfo CurrentSongInfo { get; set; }
 
         public PluginInfo Initialise(IntPtr apiInterfacePtr)
         {
@@ -28,7 +31,7 @@ namespace MusicBeePlugin
             this.about.Revision = 3;
             this.about.MinInterfaceVersion = MinInterfaceVersion;
             this.about.MinApiRevision = MinApiRevision;
-            this.about.ReceiveNotifications = (ReceiveNotificationFlags.PlayerEvents | ReceiveNotificationFlags.TagEvents);
+            this.about.ReceiveNotifications = ReceiveNotificationFlags.PlayerEvents | ReceiveNotificationFlags.TagEvents;
             this.about.ConfigurationPanelHeight = 0; // height in pixels that musicbee should reserve in a panel for config settings. When set, a handle to an empty panel will be passed to the Configure function
 
             InitialiseDiscord();
@@ -59,41 +62,25 @@ namespace MusicBeePlugin
         {
         }
 
-        private static void UpdatePresence(string song, int position, string state = "Listening to music")
+        private static void UpdatePresence(SongInfo info)
         {
-            var presence = new DiscordRPC.RichPresence { state = state };
-            song = Utility.Utf16ToUtf8(song);
-            presence.details = song.Substring(0, song.Length - 1);
-            presence.largeImageKey = "musicbee";
-            var now = (long) DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
-            presence.startTimestamp = now - position;
-            // string[] durations = duration.Split(':');
-            // long end = now + System.Convert.ToInt64(durations[0]) * 60 + System.Convert.ToInt64(durations[1]);
-            // presence.endTimestamp = end;
+            var presence = new DiscordRPC.RichPresence
+            {
+                details = $"\"{info.TrackTitle}\"",
+                state = info.Artist,
+                //                startTimestamp = info.StartTimestamp,
+                //                endTimestamp = info.EndTimestamp,
+                largeImageKey = "musicbee",
+                largeImageText = "Download MusicBee at https://getmusicbee.com/",
+                smallImageKey = "musicbee",
+                smallImageText = info.AlbumTitle,
+            };
+
             DiscordRPC.UpdatePresence(ref presence);
         }
 
         public bool Configure(IntPtr panelHandle)
         {
-            // save any persistent settings in a sub-folder of this path
-            var dataPath = this.mbApiInterface.Setting_GetPersistentStoragePath();
-            // panelHandle will only be set if you set about.ConfigurationPanelHeight to a non-zero value
-            // keep in mind the panel width is scaled according to the font the user has selected
-            // if about.ConfigurationPanelHeight is set to 0, you can display your own popup window
-            if(panelHandle != IntPtr.Zero)
-            {
-                var configPanel = (Panel) Control.FromHandle(panelHandle);
-                var prompt = new Label
-                {
-                    AutoSize = true,
-                    Location = new Point(0, 0),
-                    Text = "prompt:"
-                };
-                var textBox = new TextBox();
-                textBox.Bounds = new Rectangle(60, 0, 100, textBox.Height);
-                configPanel.Controls.AddRange(new Control[] { prompt, textBox });
-            }
-
             return false;
         }
 
@@ -102,7 +89,7 @@ namespace MusicBeePlugin
         public void SaveSettings()
         {
             // save any persistent settings in a sub-folder of this path
-            var dataPath = this.mbApiInterface.Setting_GetPersistentStoragePath();
+            //            var dataPath = this.mbApiInterface.Setting_GetPersistentStoragePath();
         }
 
         // MusicBee is closing the plugin (plugin is being disabled by user or MusicBee is shutting down)
@@ -121,37 +108,51 @@ namespace MusicBeePlugin
         public void ReceiveNotification(string sourceFileUrl, NotificationType type)
         {
             var artist = this.mbApiInterface.NowPlaying_GetFileTag(MetaDataType.Artist);
+            artist = artist.Substring(0, artist.Length);
             var trackTitle = this.mbApiInterface.NowPlaying_GetFileTag(MetaDataType.TrackTitle);
-            var duration = this.mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Duration);
-            // mbApiInterface.NowPlaying_GetDuration();
+            trackTitle = trackTitle.Substring(0, trackTitle.Length);
+            var rawDuration = this.mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Duration);
+            //            var artwork = this.mbApiInterface.NowPlaying_GetArtwork();
             var position = this.mbApiInterface.Player_GetPosition();
-            var song = $"{trackTitle} ({artist})";
-            if(string.IsNullOrEmpty(artist))
-            {
-                song = trackTitle;
-            }
 
-            // perform some action depending on the notification type
+            this.CurrentSongInfo = new SongInfo
+            {
+                Artist = StringUtils.Utf16ToUtf8(artist),
+                TrackTitle = StringUtils.Utf16ToUtf8(trackTitle),
+                Duration = ParseDuration(rawDuration),
+                Position = position
+                //                    AlbumArt = artwork
+            };
+
             switch(type)
             {
-                case NotificationType.PluginStartup:
-                    // perform startup initialisation
-                    break;
                 case NotificationType.PlayStateChanged:
                     switch(this.mbApiInterface.Player_GetPlayState())
                     {
                         case PlayState.Playing:
-                            UpdatePresence(song, position / 1000);
-                            break;
-                        case PlayState.Paused:
-                            UpdatePresence(song, 0, "Paused");
+                            this.CurrentSongInfo.Position = position / 1000;
                             break;
                     }
+
                     break;
                 case NotificationType.TrackChanged:
-                    UpdatePresence(song, 0);
+                    var now = (long) DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+                    this.CurrentSongInfo.StartTimestamp = now;
+                    var end = (long) DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds + this.CurrentSongInfo.Duration;
+                    this.CurrentSongInfo.EndTimestamp = end;
                     break;
             }
+
+            UpdatePresence(this.CurrentSongInfo);
+        }
+
+        private static int ParseDuration(string rawDuration)
+        {
+            var durations = rawDuration.Split(':');
+            var mins = Convert.ToInt32(durations[0]);
+            var secs = Convert.ToInt32(durations[1]);
+
+            return mins * 60 + secs;
         }
     }
 }

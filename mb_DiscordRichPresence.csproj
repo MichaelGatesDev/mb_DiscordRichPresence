@@ -81,7 +81,8 @@
     <Compile Include="MusicBeeInterface.cs" />
     <Compile Include="mb_DiscordRichPresence.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Util.cs" />
+    <Compile Include="SongInfo.cs" />
+    <Compile Include="StringUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
